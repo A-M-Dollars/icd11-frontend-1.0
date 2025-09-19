@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useParams } from 'next/navigation'
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { send } from '@/public/svgs/svgs'
+import Loader from '@/components/loading/loader'
 
 type senderProp = {
   id: string,
@@ -26,6 +27,19 @@ const Chatroom = () => {
   const id = params.id as string
   const queryClient = useQueryClient()
 
+  const [input, setInput] = useState("")
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // reset before resizing
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
+  const [awaitingResponse, setAwaitingResponse] = useState(false);
+
+
   // Get user data from store
   const { accessToken, isAuthenticated, id: userId } = useUserStore()
 
@@ -44,7 +58,6 @@ const Chatroom = () => {
   })
 
   const wsRef = useRef<WebSocket | null>(null)
-  const [input, setInput] = useState('')
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('disconnected')
 
   // WebSocket connection effect
@@ -84,6 +97,8 @@ const Chatroom = () => {
 
             return [...oldMessages, messageData]
           })
+
+          setAwaitingResponse(false); // 👈 hide dots when response comes
         } else if (messageData.type === 'error') {
           console.error('WebSocket error:', messageData.message)
           // You could show a toast notification here
@@ -126,6 +141,8 @@ const Chatroom = () => {
 
     wsRef.current.send(JSON.stringify(messagePayload))
     setInput('') // Clear input after sending
+    setAwaitingResponse(true); // 👈 show "thinking" dots
+
   }, [input, id])
 
   // Handle authentication check
@@ -135,22 +152,15 @@ const Chatroom = () => {
 
   // Handle loading state
   if (isLoading) {
-    return <div>Loading messages...</div>
+    return <div>
+      <Loader />
+    </div>
   }
 
   // Handle error state
   if (error) {
     return <div>Error loading messages: {error.message}</div>
   }
-
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto"; // reset before resizing
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-    }
-  }, [input]);
 
 
   return (
@@ -174,7 +184,7 @@ const Chatroom = () => {
       <div className="flex-1 overflow-y-auto p-4 bg-[#1A1A1A] brightness-60">
         {messages && messages.length > 0 ? (
           messages.map((message: messageProp) => (
-            <div key={message.id} className={`mb-5 ${message.sender.id === userId ? "border-l-3 border-gray-600" : "whitespace-pre-wrap border-l-3 border-[#96D22B]"}`}>
+            <div key={message.id} className={`mb-5 ${message.sender.id === userId ? "border-l-3 border-[#FFF]" : "whitespace-pre-wrap border-l-3 border-[#007EFF]"}`}>
               <div className="text-sm ml-4 text-gray-500">
                 {message.sender.first_name} {message.sender.last_name} •{' '}
                 {new Date(message.timestamp).toLocaleTimeString()}
@@ -188,6 +198,14 @@ const Chatroom = () => {
           </div>
         )}
       </div>
+
+      {awaitingResponse && (
+        <div className="flex items-center gap-1 text-gray-400 text-sm mt-2 ml-2">
+          <span className="w-1 h-1 bg-[#96D22B] rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+          <span className="w-1 h-1 bg-[#96D22B] rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+          <span className="w-1 h-1 bg-[#96D22B] rounded-full animate-bounce"></span>
+        </div>
+      )}
 
 
       {/* Message Input */}
@@ -213,7 +231,7 @@ const Chatroom = () => {
             onClick={sendMessage}
             disabled={!input.trim() || connectionStatus !== "connected"}
             className=" w-10 h-10
-            place-items-center px-4 py-2 bg-[#96D22B] 
+            place-items-center px-4 py-2 bg-[#007EFF] 
             rounded text-white hover:cursor-pointer disabled:opacity-50
             disabled:cursor-not-allowed"
           >
