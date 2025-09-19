@@ -212,7 +212,10 @@ const Chatroom = () => {
           <button
             onClick={sendMessage}
             disabled={!input.trim() || connectionStatus !== "connected"}
-            className=" w-10 h-10  place-items-center px-4 py-2 bg-[#96D22B] rounded text-white hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            className=" w-10 h-10
+            place-items-center px-4 py-2 bg-[#96D22B] 
+            rounded text-white hover:cursor-pointer disabled:opacity-50
+            disabled:cursor-not-allowed"
           >
             {send}
           </button>
