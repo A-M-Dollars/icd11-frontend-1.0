@@ -143,6 +143,16 @@ const Chatroom = () => {
     return <div>Error loading messages: {error.message}</div>
   }
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto"; // reset before resizing
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [input]);
+
+
   return (
     <div className="flex flex-col h-screen">
       {/* Header */}
@@ -183,24 +193,32 @@ const Chatroom = () => {
       {/* Message Input */}
       <div className="p-4 shrink-0 bg-[#1A1A1A]">
         <div className="flex gap-2">
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault(); // send on Enter
+                sendMessage();
+              }
+            }}
             placeholder="Type your message..."
-            className="flex-1 px-3 py-2 rounded border border-gray-600"
-            disabled={connectionStatus !== 'connected'}
+            rows={1}
+            className="flex-1 px-3 py-2 rounded border border-gray-600 resize-none overflow-hidden"
+            disabled={connectionStatus !== "connected"}
+            style={{ minHeight: "40px", maxHeight: "200px" }}
           />
           <button
             onClick={sendMessage}
-            disabled={!input.trim() || connectionStatus !== 'connected'}
-            className="items-center px-4 py-2 bg-[#96D22B] rounded text-white hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!input.trim() || connectionStatus !== "connected"}
+            className=" w-10 h-10  place-items-center px-4 py-2 bg-[#96D22B] rounded text-white hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {send}
           </button>
         </div>
       </div>
+
     </div>
   )
 
