@@ -100,7 +100,6 @@ const Chatroom = () => {
     }
 
     ws.onerror = (error) => {
-      // console.error('WebSocket error:', error)
       setConnectionStatus('disconnected')
     }
 
