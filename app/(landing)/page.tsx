@@ -10,8 +10,8 @@ function page() {
   const isAuthenticated = useUserStore.getState().isAuthenticated
   const route = useRouter()
 
-  if (isAuthenticated)
-    route.push('/dashboard')
+  // if (isAuthenticated)
+  //   route.push('/dashboard')
 
   return (
     <div>

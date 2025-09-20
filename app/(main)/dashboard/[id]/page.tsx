@@ -7,6 +7,8 @@ import { useParams } from 'next/navigation'
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { send } from '@/public/svgs/svgs'
 import Loader from '@/components/loading/loader'
+import Markdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 type senderProp = {
   id: string,
@@ -183,15 +185,40 @@ const Chatroom = () => {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 bg-[#1A1A1A] brightness-60">
         {messages && messages.length > 0 ? (
-          messages.map((message: messageProp) => (
-            <div key={message.id} className={`mb-5 ${message.sender.id === userId ? "border-l-3 border-[#FFF]" : "whitespace-pre-wrap border-l-3 border-[#007EFF]"}`}>
-              <div className="text-sm ml-4 text-gray-500">
-                {message.sender.first_name} {message.sender.last_name} •{' '}
-                {new Date(message.timestamp).toLocaleTimeString()}
+          messages.map((message: messageProp) =>
+            message.sender.id === userId ? (
+              <div key={message.id} className="mb-5 border-l-3 border-[#FFF]">
+                <div className="text-sm ml-4 text-gray-500">
+                  {message.sender.first_name} {message.sender.last_name} •{' '}
+                  {new Date(message.timestamp).toLocaleTimeString()}
+                </div>
+                <p className="mt-1 ml-4 text-sm">{message.message}</p>
               </div>
-              <p className="mt-1 ml-4 text-md">{message.message}</p>
-            </div>
-          ))
+            ) : (
+              <div
+                key={message.id}
+                className="mb-6 border-l-4 border-[#007EFF] bg-white rounded-md shadow-sm p-4"
+              >
+                {/* Sender + Time */}
+                <div className="text-sm text-gray-500 mb-2 flex items-center gap-2">
+                  <span className="font-medium text-gray-700">
+                    {message.sender.first_name} {message.sender.last_name}
+                  </span>
+                  <span>•</span>
+                  <span>{new Date(message.timestamp).toLocaleTimeString()}</span>
+                </div>
+
+                {/* Markdown Content */}
+                <div className="prose prose-sm max-w-none text-gray-800 text-sm/6">
+                  <Markdown remarkPlugins={[remarkGfm]}>
+                    {message.message}
+                  </Markdown>
+                </div>
+
+              </div>
+
+            )
+          )
         ) : (
           <div className="text-center text-gray-500">
             No messages yet. Start the conversation!
